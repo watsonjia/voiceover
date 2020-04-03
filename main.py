@@ -10,6 +10,6 @@ demodulated = cm.demodulate_decode(modulated)
 
 assert np.array_equal(data, demodulated)
 
-print(data.shape)
-print(modulated.shape)
-print(demodulated.shape)
+from audio import gen_waveform
+
+gen_waveform(modulated, sym_baud=4)
