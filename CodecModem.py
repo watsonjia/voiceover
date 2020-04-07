@@ -61,7 +61,7 @@ class CodecModem:
         :return: 1D array of complex symbols (floats) representing the modulated bits
         """
         # perform the convolutional encoding
-        encoded = cc.conv_encode(bits, self.trellis, 'cont')
+        encoded = cc.conv_encode(bits, self.trellis, termination='cont')
         # modulate the encoded bits and return the symbols
         return self.modem.modulate(encoded)
 
@@ -73,6 +73,6 @@ class CodecModem:
         :return: 1D array containing one bit (integer) {0, 1} which was likely used to create this string of symbols
         """
         # demodulate the symbols into the encoded bits they likely represent
-        encoded = self.modem.demodulate(symbols, 'hard')
-        return cc.viterbi_decode(encoded, self.trellis)
+        encoded = self.modem.demodulate(symbols, demod_type='hard')
+        return cc.viterbi_decode(encoded, self.trellis, decoding_type='hard')
 
