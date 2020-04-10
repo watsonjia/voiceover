@@ -2,22 +2,18 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-def _construct_rrc_filter(sym_width_s, sample_hz):
+def _construct_rrc_filter(symbol_period, f_sample):
     from commpy.filters import rrcosfilter
-    filter_len_sec = 6*sym_width_s  # span six symbols, three ahead and three behind
-    filter_len_samples = int(filter_len_sec * sample_hz)
-    _, rrc = rrcosfilter(N=filter_len_samples, alpha=0.4, Ts=sym_width_s, Fs=sample_hz)
+    filter_len_sec = 6 * symbol_period  # span six symbols, three ahead and three behind
+    filter_len_samples = int(filter_len_sec * f_sample)
+    _, rrc = rrcosfilter(N=filter_len_samples, alpha=0.4, Ts=symbol_period, Fs=f_sample)
 
     delay = filter_len_sec / 2
 
     return delay, rrc
 
 
-def gen_waveform(qam_symbols: np.ndarray,
-                 filename: str,
-                 sym_per_second: int = 512,
-                 samples_per_second: int = int(8e3),
-                 carrier_hz: int = int(1e3)):
+def gen_waveform(qam_symbols: np.ndarray, f_symbol: int = 512, f_sample: int = int(8e3), f_carrier: int = int(1e3)):
     """
     Create a sampled audio waveform based on the provided QAM symbols.
 
@@ -27,10 +23,9 @@ def gen_waveform(qam_symbols: np.ndarray,
     arbitrary modulations to the waveform.
 
     :param qam_symbols: 1d array of complex floats representing qam symbols to generate the audio
-    :param filename: save waveform (.wav and .plt) files to this name in the data directory
-    :param sym_per_second: frequency of symbols per second (NOT bits per second)
-    :param samples_per_second: sampling frequency to use for the generated waveform
-    :param carrier_hz: carrier tone (cosine wave) frequency to modulate
+    :param f_symbol: frequency of symbols per second (NOT bits per second)
+    :param f_sample: sampling frequency to use for the generated waveform
+    :param f_carrier: carrier tone (cosine wave) frequency to modulate
 
     :return: sampled audio as 1d array of floats representing raw values at each sample
     """
@@ -47,16 +42,17 @@ def gen_waveform(qam_symbols: np.ndarray,
     # end alternate variable names
 
     # compute angular frequency of carrier and symbol period (in samples)
-    w_c = 2*np.pi*carrier_hz
-    sym_width_s = 1/sym_per_second
+    w_c = 2 * np.pi * f_carrier
+    symbol_period = 1 / f_symbol
+    upsample_factor = int(symbol_period * f_sample)
 
     # filter with root raised cosine (pulse shaping) to avoid intersymbol interference
-    _, rrc = _construct_rrc_filter(sym_width_s, samples_per_second)
+    _, rrc = _construct_rrc_filter(symbol_period, f_sample)
 
     # upsample the baseband digital signal and apply the filter
     from scipy.signal import upfirdn
-    baseband_signal = upfirdn(rrc, qam_symbols, int(sym_width_s*samples_per_second))
-    t_signal = np.arange(len(baseband_signal)) / samples_per_second
+    baseband_signal = upfirdn(rrc, qam_symbols, upsample_factor)
+    t_signal = np.arange(len(baseband_signal)) / f_sample
 
     # compute the in-phase and quadrature components of the signal
     i_quad = baseband_signal.real * np.cos(w_c*t_signal)
@@ -64,30 +60,25 @@ def gen_waveform(qam_symbols: np.ndarray,
 
     signal = i_quad + q_quad
 
-    import wavio
-    wavio.write('data/{}.wav'.format(filename), signal, samples_per_second, sampwidth=2)
+    return signal
 
 
-def parse_waveform(filename: str,
+def parse_waveform(input_wave: np.ndarray,
                    sym_per_second: int = 512,
                    samples_per_second: int = int(8e3),
                    carrier_hz: int = int(1e3)) -> np.ndarray:
     """
     Read a sampled waveform and extract the symbols modulated into it.
 
-    :param filename: wave file to read (without the .wav extension)
+    :param input_wave: raw audio samples
     :param sym_per_second: frequency of symbols per second (NOT bits per second)
     :param samples_per_second: sampling frequency to use for the generated waveform
     :param carrier_hz: carrier tone (cosine wave) frequency to modulate
     :return: symbols extracted from the waveform
     """
-    # compute angular frequency of carrier and symbol period (in samples)
+    # compute angular frequency of carrier, symbol period (in samples), and time series for signal samples
     w_c = 2*np.pi*carrier_hz
     samples_per_symbol = int(samples_per_second / sym_per_second)
-
-    import wavio
-    input_wave: np.ndarray = wavio.read('data/{}.wav'.format(filename)).data[:, 0]
-
     t_signal = np.arange(len(input_wave)) / samples_per_second
 
     # extract the quadrature components

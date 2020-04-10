@@ -19,8 +19,8 @@ if __name__ == '__main__':
 
     # test full pipeline
     encoded = cm.encode_modulate(data_tx)
-    gen_waveform(encoded, '{}_full'.format(timestamp))
-    parsed = parse_waveform('{}_full'.format(timestamp))
+    wave = gen_waveform(encoded)
+    parsed = parse_waveform(wave)
     data_rx = cm.demodulate_decode(parsed)
 
     for i, bit in enumerate(data_tx):
