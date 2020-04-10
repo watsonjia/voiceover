@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class ModemAudio:
+class AudioModem:
 
     def __init__(self, f_symbol: int = 1024, f_sample: int = int(8e3), f_carrier: int = int(1e3)):
         """
