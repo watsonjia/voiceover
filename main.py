@@ -6,19 +6,16 @@ timestamp = dt.utcnow().isoformat().replace(':', '_')
 
 if __name__ == '__main__':
     # instantiate codec and modem parameters
-    from CodecModem import CodecModem
-    cod_mod = CodecModem(2)
-    from AudioModem import AudioModem
-    aud_mod = AudioModem()
-    print("Theoretical bitrate ignoring coding overhead: {} bps".format(aud_mod.f_symbol*2))  # 2 bits per symbol
+    from Wavinator.Wavinator import Wavinator
+    waver = Wavinator()
+    print("Theoretical bitrate: {} bps".format(waver.bit_rate))
 
     # create test data
-    data_tx = np.random.randint(0, 2, (2**16,))
+    data_tx = bytes(np.random.bytes(2**8))
 
     # create transmit signal
     start = time()
-    symbol_tx = cod_mod.encode_modulate(data_tx)
-    signal_tx = aud_mod.modulate(symbol_tx)
+    signal_tx = waver.wavinate(data_tx)
     end = time()
     tx_time = end - start
     print("tx {} bits in {} seconds ({} bps)".format(len(data_tx), tx_time, int(len(data_tx)/tx_time)))
@@ -28,14 +25,25 @@ if __name__ == '__main__':
 
     # recover original data from signal
     start = time()
-    symbol_rx = aud_mod.demodulate(signal_rx)
-    data_rx = cod_mod.demodulate_decode(symbol_rx)
+    data_rx = waver.dewavinate(signal_rx)
     end = time()
     rx_time = end - start
     print("rx {} bits in {} seconds ({} bps)".format(len(data_rx), rx_time, int(len(data_rx)/rx_time)))
 
     # check that the transmitted data is recovered from the received data (even if it has some trailing bits)
-    for i, bit in enumerate(data_tx):
-        assert bit == data_rx[i]
+    for i, byte in enumerate(data_tx):
+        assert byte == data_rx[i]
 
     print("Success!")
+
+    while True:
+        sentence = input()
+        if sentence is not None and len(sentence) >= 16:
+            sentence_bytes = np.frombuffer(bytes(sentence, encoding='utf-8'), dtype=np.uint8)
+            signal_tx = waver.wavinate(sentence_bytes)
+            signal_rx = signal_tx
+            recovered_bytes = waver.dewavinate(signal_rx)
+            recovered_sentence = str(recovered_bytes, encoding='utf-8')
+            print(recovered_sentence)
+        else:
+            break
