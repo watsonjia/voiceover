@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from time import time
 from datetime import datetime as dt
@@ -5,6 +6,7 @@ timestamp = dt.utcnow().isoformat().replace(':', '_')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     # instantiate codec and modem parameters
     from Wavinator.Wavinator import Wavinator
     waver = Wavinator()
@@ -21,7 +23,10 @@ if __name__ == '__main__':
     print("tx {} bits in {} seconds ({} bps)".format(len(data_tx), tx_time, int(len(data_tx)/tx_time)))
 
     # perfect loss-less signal transmission
-    signal_rx = signal_tx
+    import wavio
+    filename = 'data/random_signal_{}.wav'.format(timestamp)
+    wavio.write(filename, signal_tx, waver.sample_rate, sampwidth=2)
+    signal_rx = wavio.read(filename).data[:, 0]
 
     # recover original data from signal
     start = time()

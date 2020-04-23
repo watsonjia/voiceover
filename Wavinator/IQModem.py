@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 
@@ -28,6 +29,15 @@ class IQModem:
         rrc_delay, self._rrc_fir = self._construct_rrc_filter()
         lp_delay, self._lp_fir = self._construct_lowpass_filter()
         self._filter_delay_samples = int((2 * rrc_delay + lp_delay) * self._f_sample)
+
+        logging.info(
+            'Instantiated IQModem with const_size {CS}, f_symbol {FSY}, f_sample {FSA}, and f_carrier {FC}'.format(
+                CS=const_size,
+                FSY=f_symbol,
+                FSA=f_sample,
+                FC=f_carrier,
+            )
+        )
 
     def _construct_rrc_filter(self):
         # filter parameters
@@ -79,6 +89,7 @@ class IQModem:
 
         # sum the quadrature signals to get a real-valued signal for transmission
         signal = i_quad + q_quad
+        logging.info('Modulated {}-bit coded signal with {} samples'.format(len(coded_bits), len(signal)))
         return signal
 
     def demodulate(self, rx_wave: np.ndarray) -> np.ndarray:
@@ -111,9 +122,14 @@ class IQModem:
         recovered_symbols = recovered_signal[self._filter_delay_samples::int(self._upsmple_factor)]
 
         # demodulate the symbols into bits modulating the signal
-        return self._modem.demodulate(recovered_symbols, demod_type='hard')
+        bits = self._modem.demodulate(recovered_symbols, demod_type='hard')
+        logging.info('Demodulated signal with {} samples to a {}-bit message'.format(len(rx_wave), len(bits)))
+        return bits
 
     @property
     def bitrate(self):
         return self._modem.num_bits_symbol * self._f_symbol
 
+    @property
+    def sample_rate(self):
+        return self._f_sample

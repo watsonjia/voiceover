@@ -27,3 +27,7 @@ class Wavinator:
     @property
     def bit_rate(self):
         return self._codec.coding_rate * self._modem.bitrate
+
+    @property
+    def sample_rate(self):
+        return self._modem.sample_rate
