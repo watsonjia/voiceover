@@ -29,7 +29,7 @@ def fill_half_template(wave_gen: Wavinator, template_array: np.ndarray) -> np.nd
             segment_length = i - segment_start
             if curr_sample < 0:
                 # not speaking, generate silence
-                num_samples = segment_length * wave_gen.sample_rate
+                num_samples = int(round(segment_length * wave_gen.sample_rate))
                 new_signal = np.zeros((num_samples,))
             else:
                 # speaking, generate waveform
@@ -57,12 +57,12 @@ if __name__ == '__main__':
     for temp_num, template in enumerate(templates):
         # first speaker
         speaker_a = fill_half_template(waver, template[0, :])
-        print(TOTAL_BYTES)
+        # print(TOTAL_BYTES)
         TOTAL_BYTES = 0
 
         # second speaker
         speaker_b = fill_half_template(waver, template[1, :])
-        print(TOTAL_BYTES)
+        # print(TOTAL_BYTES)
 
         # match length
         if len(speaker_a) < len(speaker_b):
@@ -70,13 +70,15 @@ if __name__ == '__main__':
         elif len(speaker_b) < len(speaker_a):
             speaker_b = pad_array(speaker_b, speaker_a)
 
-        # output to files
         import wavio
         file_a = 'data/output_audio/gan_modeled/{TEMPLATE_NUM:03}a.wav'.format(TEMPLATE_NUM=temp_num)
         wavio.write(file_a, speaker_a, waver.sample_rate, sampwidth=2)
+        print('speaker_a duration: {}s/{}s'.format(len(speaker_a) / waver.sample_rate, '300'))
+
         file_b = 'data/output_audio/gan_modeled/{TEMPLATE_NUM:03}b.wav'.format(TEMPLATE_NUM=temp_num)
         wavio.write(file_b, speaker_b, waver.sample_rate, sampwidth=2)
+        print('speaker_b duration: {}s/{}s'.format(len(speaker_b) / waver.sample_rate, '300'))
 
-        # only output 12 for now
-        if temp_num == 12:
+        # output ten hours worth of 5-minute samples
+        if temp_num == 120:
             break

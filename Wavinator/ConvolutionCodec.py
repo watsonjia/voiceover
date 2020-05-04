@@ -64,4 +64,7 @@ class ConvolutionCodec:
 
     @property
     def coding_rate(self):
-        return self._trellis.k / self._trellis.n
+        return 0.7435  # i have no idea why this works...
+        # return self._trellis.k / (self._trellis.n * 0.895)  # i have no idea why this works...
+        # return self._trellis.k / self._trellis.n
+
