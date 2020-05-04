@@ -3,3 +3,5 @@ __pycache__
 *.gz
 *.wav
 *.npz
+*.csv
+*.pcapng
