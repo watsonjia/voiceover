@@ -46,6 +46,7 @@ if __name__ == '__main__':
         if sentence is not None and len(sentence) >= 16:
             sentence_bytes = np.frombuffer(bytes(sentence, encoding='utf-8'), dtype=np.uint8)
             signal_tx = waver.wavinate(sentence_bytes)
+            wavio.write('data/sentence_signal_{}.wav'.format(timestamp), signal_tx, waver.sample_rate, sampwidth=2)
             signal_rx = signal_tx
             recovered_bytes = waver.dewavinate(signal_rx)
             recovered_sentence = str(recovered_bytes, encoding='utf-8')
