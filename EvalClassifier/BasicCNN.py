@@ -1,6 +1,6 @@
 import numpy as np
 
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 EPOCHS = 128
 NUM_CLASS = 2
 
@@ -10,36 +10,35 @@ class BasicCNN:
     def __init__(self):
         from EvalClassifier.extract_bytes_io import extract_bytes, extract_bytes_multi
         self.gan_data = extract_bytes_multi(['data/gan_01.0hr.csv', 'data/gan_01.0hr_013-024.csv'], is_fake=True)
-        self.real_data = extract_bytes_multi(['data/real_01.5hr.csv', 'data/real_04.0hr.csv'], is_fake=False)
+        self.real_data = extract_bytes_multi(['data/real_01.5hr.csv', 'data/real_02.0hr.csv'], is_fake=False)
         self.straw_data = extract_bytes('data/straw_01.0hr.csv', is_fake=True)
 
     @staticmethod
     def _gen_model():
         from EvalClassifier.extract_bytes_io import WINDOW_SIZE
-        data_shape = [2, WINDOW_SIZE, 1]
+        data_shape = [WINDOW_SIZE, 1]
 
         from keras.models import Sequential
-        from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
+        from keras.layers import Conv1D, Dropout, Flatten, Dense
 
         model = Sequential()
-        model.add(Conv2D(
+        model.add(Conv1D(
             filters=8,
-            kernel_size=(3, 3),
-            strides=(1, 1),
+            kernel_size=3,
+            strides=1,
             padding='same',
             activation='relu',
             kernel_initializer='random_uniform',
             input_shape=data_shape,
         ))
-        model.add(Conv2D(
+        model.add(Conv1D(
             filters=16,
-            kernel_size=(3, 3),
-            strides=(1, 1),
+            kernel_size=3,
+            strides=1,
             padding='same',
             activation='relu',
             kernel_initializer='random_uniform',
         ))
-        model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
         model.add(Flatten())
         model.add(Dense(16, activation='relu'))
@@ -84,7 +83,7 @@ class BasicCNN:
 
         model = self._gen_model()
 
-        x_train, x_test, y_train, y_test = train_test_split(samples, labels, test_size=0.1, random_state=43234)
+        x_train, x_test, y_train, y_test = train_test_split(samples, labels, test_size=0.2)
 
         y_test_original = y_test.copy()
 

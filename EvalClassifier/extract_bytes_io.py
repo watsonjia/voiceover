@@ -3,10 +3,11 @@ import pandas as pd
 
 
 WINDOW_SECONDS = 30
-STEP_SECONDS = 10
+STEP_SECONDS = 15
+SAMPLES_PER_SECOND = 1
 
-WINDOW_SIZE = WINDOW_SECONDS * 10  # 60 ~s * (1000 ~ms / 1 ~s) * (1 element / 100 ~ms) = 600 elements per minute
-STEP_SIZE = STEP_SECONDS * 10
+WINDOW_SIZE = WINDOW_SECONDS * SAMPLES_PER_SECOND
+STEP_SIZE = STEP_SECONDS * SAMPLES_PER_SECOND
 
 
 def extract_bytes(src_file: str, is_fake: bool):
@@ -50,7 +51,10 @@ def window_samples(data_set: pd.DataFrame, window_size=WINDOW_SIZE, step_size=ST
         bytes_in = data_set['b_in'][start_element:end_element]
         bytes_out = data_set['b_out'][start_element:end_element]
 
-        tmp_sample = np.stack((bytes_in, bytes_out))
+        # normalize the difference between in and out bytes
+        tmp_sample = bytes_in - bytes_out
+        tmp_sample = tmp_sample.to_numpy(copy=True) / np.max(np.abs(tmp_sample))
+
         new_samples.append(tmp_sample)
         new_labels.append(data_set['fake'][end_element - 1])
 
