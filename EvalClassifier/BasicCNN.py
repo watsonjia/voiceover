@@ -8,9 +8,9 @@ NUM_CLASS = 2
 class BasicCNN:
 
     def __init__(self):
-        from EvalClassifier.extract_bytes_io import extract_bytes
-        self.gan_data = extract_bytes('data/gan_01.0hr.csv', is_fake=True)
-        self.real_data = extract_bytes('data/real_01.5hr.csv', is_fake=False)
+        from EvalClassifier.extract_bytes_io import extract_bytes, extract_bytes_multi
+        self.gan_data = extract_bytes_multi(['data/gan_01.0hr.csv', 'data/gan_01.0hr_013-024.csv'], is_fake=True)
+        self.real_data = extract_bytes_multi(['data/real_01.5hr.csv', 'data/real_04.0hr.csv'], is_fake=False)
         self.straw_data = extract_bytes('data/straw_01.0hr.csv', is_fake=True)
 
     @staticmethod
@@ -84,7 +84,7 @@ class BasicCNN:
 
         model = self._gen_model()
 
-        x_train, x_test, y_train, y_test = train_test_split(samples, labels, test_size=0.3)  # , random_state=43234)
+        x_train, x_test, y_train, y_test = train_test_split(samples, labels, test_size=0.1, random_state=43234)
 
         y_test_original = y_test.copy()
 

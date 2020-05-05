@@ -1,8 +1,12 @@
 import numpy as np
 import pandas as pd
 
-WINDOW_SIZE = 300  # 30 ~s * (1000 ~ms / 1 ~s) * (1 element / 100 ~ms) = 300 elements per half minute
-STEP_SIZE = 200  # 20 ~s (1000 ~ms / 1 ~s) * (1 element / 100 ~ms) = 200 elements per 20 seconds
+
+WINDOW_SECONDS = 30
+STEP_SECONDS = 10
+
+WINDOW_SIZE = WINDOW_SECONDS * 10  # 60 ~s * (1000 ~ms / 1 ~s) * (1 element / 100 ~ms) = 600 elements per minute
+STEP_SIZE = STEP_SECONDS * 10
 
 
 def extract_bytes(src_file: str, is_fake: bool):
@@ -15,6 +19,24 @@ def extract_bytes(src_file: str, is_fake: bool):
         tmp_df['fake'] = np.zeros_like(tmp_df['t'])
 
     return window_samples(tmp_df)
+
+
+def extract_bytes_multi(src_files: list, is_fake: bool):
+    total_samples = []
+
+    for filename in src_files:
+        curr_samples, curr_labels = extract_bytes(filename, is_fake)
+
+        total_samples.append(curr_samples)
+
+    total_samples = np.concatenate(total_samples, axis=0)
+
+    if is_fake:
+        total_labels = np.ones(total_samples.shape[0])
+    else:
+        total_labels = np.zeros(total_samples.shape[0])
+
+    return total_samples, total_labels
 
 
 def window_samples(data_set: pd.DataFrame, window_size=WINDOW_SIZE, step_size=STEP_SIZE):
