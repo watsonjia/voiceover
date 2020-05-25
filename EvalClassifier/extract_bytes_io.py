@@ -3,7 +3,7 @@ import pandas as pd
 
 
 WINDOW_SECONDS = 30
-STEP_SECONDS = 15
+STEP_SECONDS = 10
 SAMPLES_PER_SECOND = 1
 
 WINDOW_SIZE = WINDOW_SECONDS * SAMPLES_PER_SECOND
@@ -17,7 +17,7 @@ def extract_bytes(src_file: str, is_fake: bool):
     if is_fake:
         tmp_df['fake'] = np.ones_like(tmp_df['t'])
     else:
-        tmp_df['fake'] = np.zeros_like(tmp_df['t'])
+        tmp_df['fake'] = np.ones_like(tmp_df['t'])*-1
 
     return window_samples(tmp_df)
 

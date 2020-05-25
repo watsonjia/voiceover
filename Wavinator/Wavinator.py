@@ -3,12 +3,15 @@ import numpy as np
 
 class Wavinator:
 
-    def __init__(self):
+    def __init__(self, f_carrier=None):
         from Wavinator.ConvolutionCodec import ConvolutionCodec
         from Wavinator.IQModem import IQModem
 
         self._codec = ConvolutionCodec()
-        self._modem = IQModem()
+        if f_carrier is not None:
+            self._modem = IQModem(f_carrier=f_carrier)
+        else:
+            self._modem = IQModem()
 
     def wavinate(self, message: bytes):
         # convert bytes to ndarray of uint8 (unsigned byte array)

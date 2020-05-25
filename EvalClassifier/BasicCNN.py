@@ -1,7 +1,7 @@
 import numpy as np
 
 BATCH_SIZE = 16
-EPOCHS = 128
+EPOCHS = 1024
 NUM_CLASS = 2
 
 
@@ -43,11 +43,11 @@ class BasicCNN:
         model.add(Flatten())
         model.add(Dense(16, activation='relu'))
         model.add(Dropout(0.5))
-        model.add(Dense(NUM_CLASS, activation='softmax'))
+        model.add(Dense(1, activation='relu'))
 
         model.compile(
-            loss='categorical_crossentropy',
-            optimizer='rmsprop',
+            loss='binary_crossentropy',
+            optimizer='adam',
             metrics=['accuracy'],
         )
 
@@ -77,20 +77,15 @@ class BasicCNN:
         plt.tight_layout()
         plt.show()
 
-    def _train_and_test(self, target_class_name, samples, labels):
+    def _train_and_test(self, samples, labels):
         from sklearn.model_selection import train_test_split
-        from keras.utils import to_categorical
 
         model = self._gen_model()
 
         x_train, x_test, y_train, y_test = train_test_split(samples, labels, test_size=0.2)
 
-        y_test_original = y_test.copy()
-
         x_train = np.expand_dims(x_train, axis=-1)
-        y_train = to_categorical(y_train, num_classes=NUM_CLASS)
         x_test = np.expand_dims(x_test, axis=-1)
-        y_test = to_categorical(y_test, num_classes=NUM_CLASS)
 
         model.fit(
             x=x_train,
@@ -102,17 +97,16 @@ class BasicCNN:
             verbose=2,
         )
 
-        label_predictions = model.predict_classes(x_test)
-        self._show_confusion_matrix(target_class_name, label_predictions, y_test_original)
+        return model, x_test, y_test
 
     def train_straw(self):
         samples = np.concatenate((self.straw_data[0], self.real_data[0]))
         labels = np.concatenate((self.straw_data[1], self.real_data[1]))
 
-        self._train_and_test('Strawman', samples, labels)
+        return self._train_and_test(samples, labels)
 
     def train_voiceover(self):
         samples = np.concatenate((self.gan_data[0], self.real_data[0]))
         labels = np.concatenate((self.gan_data[1], self.real_data[1]))
 
-        self._train_and_test('Voiceover', samples, labels)
+        return self._train_and_test(samples, labels)

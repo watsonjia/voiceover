@@ -3,7 +3,7 @@ import numpy as np
 
 
 class IQModem:
-    def __init__(self, const_size: int = 4, f_symbol: int = 1024, f_sample: int = int(8e3), f_carrier: int = int(1e3)):
+    def __init__(self, const_size: int = 4, f_symbol: int = 128, f_sample: int = int(8e3), f_carrier: int = int(1e3)):
         """
         Initialize the audio component of a modulator/demodulator using IQ modulation of complex QAM symbols.
 
