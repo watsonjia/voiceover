@@ -56,11 +56,13 @@ if __name__ == '__main__':
 
     for temp_num, template in enumerate(templates):
         # first speaker
+        print('speaker A')
         speaker_a = fill_half_template(waver, template[0, :])
         # print(TOTAL_BYTES)
         TOTAL_BYTES = 0
 
         # second speaker
+        print('speaker B')
         speaker_b = fill_half_template(waver, template[1, :])
         # print(TOTAL_BYTES)
 
@@ -80,5 +82,4 @@ if __name__ == '__main__':
         print('speaker_b duration: {}s/{}s'.format(len(speaker_b) / waver.sample_rate, '300'))
 
         # output ten hours worth of 5-minute samples
-        if temp_num == 120:
-            break
+        break

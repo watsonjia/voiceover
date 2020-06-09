@@ -2,6 +2,8 @@ import logging
 import numpy as np
 import commpy.channelcoding.convcode as cc
 
+LENGTH_SIZE = 4
+
 
 class ConvolutionCodec:
     def __init__(self):
@@ -12,6 +14,8 @@ class ConvolutionCodec:
         """
         # instantiate trellis object
         self._trellis = self._make_trellis()
+
+        logging.info('Instantiated ConvolutionCodec with default trellis r = 2/3')
 
     @staticmethod
     def _make_trellis() -> cc.Trellis:
@@ -39,12 +43,24 @@ class ConvolutionCodec:
         :param message: array of message bits (minimum length determined by trellis)
         :return: array of encoded message bits ready for modulation
         """
+        # prepend length to message
+        message_length = len(message)
+        data_type = np.dtype('uint8')
+        data_type = data_type.newbyteorder('>')
+        length_bytes = np.frombuffer(
+            message_length.to_bytes(LENGTH_SIZE, byteorder='big', signed=False),
+            dtype=data_type
+        )
+        message = np.insert(message, 0, length_bytes)
+
         # convert bytes to bit array
         bits = np.unpackbits(message, bitorder='big')
 
         # perform the convolution encoding
         encoded = cc.conv_encode(bits, self._trellis, termination='cont')
-        logging.info('Encoded {}-byte message into {}-bit coded message'.format(len(message), len(encoded)))
+        logging.info('Encoded {}-byte message into {}-bit convolution coded parity message'.format(
+            message_length, len(encoded))
+        )
         return encoded
 
     def decode(self, encoded: np.ndarray) -> np.ndarray:
@@ -59,7 +75,16 @@ class ConvolutionCodec:
 
         # return the bytes from the decoded bits
         message = np.packbits(decoded, bitorder='big')
-        logging.info('Decoded {} bits into {}-byte message'.format(len(encoded), len(message)))
+
+        # detect message length and truncate
+        message_length = int.from_bytes(message[0:LENGTH_SIZE], byteorder='big', signed=False)
+        if message_length > len(message) - LENGTH_SIZE:
+            raise RuntimeError('Invalid message-length tag')
+        message = message[LENGTH_SIZE:LENGTH_SIZE+message_length]
+
+        logging.info('Decoded {} convolution coded parity bits into {}-byte message'.format(
+            len(encoded), message_length)
+        )
         return message
 
     @property
